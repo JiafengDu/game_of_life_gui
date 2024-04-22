@@ -5,14 +5,15 @@ public class Main {
     View view = new View();
     Model model = new Model();
     Controller controller = new Controller(model, view);
+    view.setVisible(true);    // Show the GUI;
 
+    System.out.print("Please enter the size of the board: ");
     // User enter the size of the board;
     Scanner input = new Scanner(System.in);
-    System.out.print("Please enter the size of the board: ");
     int userInput = input.nextInt();
-    controller.setUserInputSize(userInput);
 
-    // Show the GUI;
-    view.setVisible(true);
+    controller.setUserInputSizeBoard(userInput);
+
+
   }
 }

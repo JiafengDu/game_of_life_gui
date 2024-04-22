@@ -2,7 +2,7 @@ public class Model {
 
   // userInput: N * N;
   // If user input <=1, throw IllegalArgumentException;
-  public int[][] sizeOfBoard(int userInputSize) throws IllegalArgumentException {
+  public int[][] initialBoard(int userInputSize) throws IllegalArgumentException {
     if (userInputSize > 0) {
       return new int[userInputSize][userInputSize];
     } else {
@@ -10,7 +10,7 @@ public class Model {
     }
   }
 
-  // update the new board according to the role;
+  // The method to update the new board according to the role;
   public void newBoard(int[][] sizeOfBoard) {
     // the array to be added for check the 8 cell around the specific cell.
     int[] checkArray = {-1, 0, 1};
