@@ -6,8 +6,12 @@ import javax.swing.event.DocumentListener;
 
 public class View extends JFrame implements ActionListener {
   private JLabel promptSize;
-  private JTextField size;
-  private JButton ok;
+
+  JTextField size;
+  private String input;
+  int outputSize;
+  JComboBox<String> initialState;
+  JButton ok;
   private JButton start;
   private JButton stop;
 
@@ -22,10 +26,10 @@ public class View extends JFrame implements ActionListener {
     buttonPanel.setBackground(Color.LIGHT_GRAY);
 
     // Add a label to prompt enter reminder for user;
-    promptSize = new JLabel("Please enter the size of the board(Integer and 1 is the minimum): ");
+    promptSize = new JLabel("Please enter the size of the board(Integer and 10 is the minimum): ");
     add(promptSize);
 
-    // user enter size of the board;
+    // user enter the size of the board;
     size = new JTextField(3);
     size.getDocument()
         .addDocumentListener(
@@ -54,32 +58,66 @@ public class View extends JFrame implements ActionListener {
     ok.addActionListener(this);
     add(ok);
 
+    // A button for user to select the initial state of the grid;
+    initialState = new JComboBox<>();
+    initialState.addItem("Glider");
+    initialState.addItem("Spaceship");
+    initialState.setEnabled(false);
+    initialState.addActionListener(
+        new ActionListener() {
+          @Override
+          public void actionPerformed(ActionEvent e) {
+            if (initialState.getSelectedIndex() == 0) {
+              // 执行Glider的默认图示；
+            }
+
+            if (initialState.getSelectedIndex() == 1) {
+              // 执行Spaceship的默认图示；
+            }
+          }
+        });
+    add(initialState);
+
     // Add a "Start" button;
     start = new JButton("START!");
     start.addActionListener(this);
+    start.setEnabled(false);
     buttonPanel.add(start);
 
     // Add a "Stop" button;
     stop = new JButton("STOP!");
     stop.addActionListener(this);
+    stop.setEnabled(false);
     buttonPanel.add(stop);
   }
 
-  // The ok button is not working if it's empty, only blank, or not all digit;
+  // The ok button is not working if it's empty, only blank, or not all digit or <10;
   private void updateButtonState() {
-    String input = size.getText().trim();
+    input = size.getText().trim();
     boolean isValid = input.matches("\\d+");
 
-    ok.setEnabled(!input.isEmpty() && isValid);
+    ok.setEnabled(!input.isEmpty() && isValid && equalBigger10());
   }
 
+  // userInput: N * N;
+  // If user input >=10 return true; <10, return false;
+  public boolean equalBigger10() {
+    return Integer.parseInt(input) >= 10;
+  }
+
+  // Actions for click every Jbutton;
   public void actionPerformed(ActionEvent e) {
     String actionCommand = e.getActionCommand();
 
+    // input the size N from user to the grid, 10 is the minimum
     if (actionCommand.equals("OK")) {
-      // input the size N from user to the grid, 1 is the minimum
-      // need to change from string to integer;
-      // size.getText().trim();
+      System.out.println(Integer.parseInt(input));
+      outputSize = Integer.parseInt(input);
+
+      // after the user click the ok, all this tree button will turn on;
+      initialState.setEnabled(true);
+      start.setEnabled(true);
+      stop.setEnabled(true);
     }
 
     if (actionCommand.equals("START!")) {

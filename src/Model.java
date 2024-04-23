@@ -1,33 +1,29 @@
 public class Model {
 
   // userInput: N * N;
-  // If user input <=1, throw IllegalArgumentException;
-  public int[][] initialBoard(int userInputSize) throws IllegalArgumentException {
-    if (userInputSize > 0) {
-      return new int[userInputSize][userInputSize];
-    } else {
-      throw new IllegalArgumentException("The Board should be an integer and >= 1.");
-    }
+  // If user input >=10;
+  public int[][] initialBoard(int userInputSize) {
+    return new int[userInputSize][userInputSize];
   }
 
   // The method to update the new board according to the role;
-  public void newBoard(int[][] sizeOfBoard) {
+  public void newBoard(int[][] initialBoard) {
     // the array to be added for check the 8 cell around the specific cell.
     int[] checkArray = {-1, 0, 1};
 
-    int rows = sizeOfBoard.length;
-    int cols = sizeOfBoard[0].length;
+    int rows = initialBoard.length;
+    int cols = initialBoard[0].length;
 
-    // make a 2D copyArray to keep the original sizeOfBoard;
+    // make a 2D copyArray to keep the original initialBoard;
     int[][] copy = new int[rows][cols];
 
     for (int i = 0; i < rows; i++) {
       for (int i1 = 0; i1 < cols; i1++) {
-        copy[i][i1] = sizeOfBoard[i][i1];
+        copy[i][i1] = initialBoard[i][i1];
       }
     }
 
-    // update the sizeOfBoard;
+    // update the initialBoard;
     for (int row = 0; row < rows; row++) {
       for (int col = 0; col < cols; col++) {
 
@@ -53,12 +49,12 @@ public class Model {
           // empty in the next generation.
           // 3. A creature that has less than 2 neighbors will die of loneliness.
           if (oneAroundIt > 3 || oneAroundIt < 2) {
-            sizeOfBoard[row][col] = 0;
+            initialBoard[row][col] = 0;
           }
 
           // 4. A new creature born in an empty cell that has exactly 3 neighbors.
         } else if (oneAroundIt == 3) {
-          sizeOfBoard[row][col] = 1;
+          initialBoard[row][col] = 1;
         }
       }
     }

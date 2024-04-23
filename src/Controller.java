@@ -12,7 +12,7 @@ public class Controller {
   }
 
   // Update the board after the first initial board with all 0 in every grid.
-  public void updateBoard(int[][] setUserInputSize) {
-    model.newBoard(setUserInputSize);
+  public void updateBoard(int[][] initialBoard) {
+    model.newBoard(initialBoard);
   }
 }
