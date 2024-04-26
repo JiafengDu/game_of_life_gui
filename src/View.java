@@ -1,130 +1,181 @@
-import java.awt.Color;
+import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-public class View extends JFrame implements ActionListener {
+public class View extends JFrame implements IView{
+  private boolean gameRunning = false;
   private JLabel promptSize;
-
-  JTextField size;
+  private JTextField size;
   private String input;
   int outputSize;
-  JComboBox<String> initialState;
-  JButton ok;
-  private JButton start;
-  private JButton stop;
+  private JButton ok;
+  private JButton startStopButton;
+  private JButton resetButton;
+  private JPanel gameBoard;
 
+  /***
+   * constructor to start the initial page users see
+   */
   public View() {
     super("✨The Game Of Life✨");
-    setSize(600, 400);
+    setSize(600, 600);
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    //    setLayout(new BorderLayout());
+    setLayout(new BorderLayout());
 
     JPanel buttonPanel = new JPanel();
-    setContentPane(buttonPanel);
+    add(buttonPanel, BorderLayout.NORTH);
     buttonPanel.setBackground(Color.LIGHT_GRAY);
 
-    // Add a label to prompt enter reminder for user;
-    promptSize = new JLabel("Please enter the size of the board(Integer and 10 is the minimum): ");
-    add(promptSize);
+    promptSize = new JLabel("Please enter the size of the board(Integer and 3 is the minimum): ");
+    buttonPanel.add(promptSize);
 
-    // user enter the size of the board;
     size = new JTextField(3);
-    size.getDocument()
-        .addDocumentListener(
-            new DocumentListener() {
-              @Override
-              public void insertUpdate(DocumentEvent e) {
-                updateButtonState();
-              }
+    size.getDocument().addDocumentListener(new DocumentListener() {
+      @Override
+      public void insertUpdate(DocumentEvent e) {
+        updateButtonState();
+      }
+      @Override
+      public void removeUpdate(DocumentEvent e) {
+      }
+      @Override
+      public void changedUpdate(DocumentEvent e) {
+        updateButtonState();
+      }
+    });
+    buttonPanel.add(size);
 
-              @Override
-              public void removeUpdate(DocumentEvent e) {
-                updateButtonState();
-              }
-
-              @Override
-              public void changedUpdate(DocumentEvent e) {
-                updateButtonState();
-              }
-            });
-    add(size);
-
-    // A button for user to click to get the size for the board after they enter the number;
-    // The ok button is not working if it's empty, only blank, or not all digit;
     ok = new JButton("OK");
     ok.setEnabled(false);
-    ok.addActionListener(this);
-    add(ok);
+    buttonPanel.add(ok);
 
-    // A button for user to select the initial state of the grid;
-    initialState = new JComboBox<>();
-    initialState.addItem("Glider");
-    initialState.addItem("Spaceship");
-    initialState.setEnabled(false);
-    initialState.addActionListener(
-        new ActionListener() {
-          @Override
-          public void actionPerformed(ActionEvent e) {
-            if (initialState.getSelectedIndex() == 0) {
-              // 执行Glider的默认图示；
-            }
-
-            if (initialState.getSelectedIndex() == 1) {
-              // 执行Spaceship的默认图示；
-            }
-          }
-        });
-    add(initialState);
+    resetButton = new JButton("RESET");
+    resetButton.setEnabled(false);
+    buttonPanel.add(resetButton);
 
     // Add a "Start" button;
-    start = new JButton("START!");
-    start.addActionListener(this);
-    start.setEnabled(false);
-    buttonPanel.add(start);
-
-    // Add a "Stop" button;
-    stop = new JButton("STOP!");
-    stop.addActionListener(this);
-    stop.setEnabled(false);
-    buttonPanel.add(stop);
+    startStopButton = new JButton("START!");
+    startStopButton.setEnabled(false);
+    add(startStopButton, BorderLayout.SOUTH);
   }
 
-  // The ok button is not working if it's empty, only blank, or not all digit or <10;
+  /***
+   * create a game board component and assign each cell an actionListener
+   * @param n
+   * @param features
+   */
+  private void createGameBoard(int n, Features features) {
+    gameBoard = new JPanel(new GridLayout(n, n));
+    gameBoard.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+    gameBoard.setSize(new Dimension(20*n, 20*n));
+    features.initializeBoard(n);
+
+    // Create individual cells for the grid
+    for (int i = 0; i < n; i++) {
+      for (int j = 0; j < n; j++) {
+        JButton cell = new JButton();
+        int finalI = i;
+        int finalJ = j;
+        cell.setBackground(Color.white);
+        cell.addActionListener(new ActionListener() {
+          @Override
+          public void actionPerformed(ActionEvent e) {
+            features.updateCell(finalI, finalJ);
+            cell.setBackground(Color.black);
+          }
+        });
+        gameBoard.add(cell);
+      }
+    }
+  }
+
+  private void resetGame() {
+    gameRunning = false;
+    startStopButton.setText("START!");
+    if (gameBoard != null) {
+      remove(gameBoard); // Remove the game board from the view
+    }
+    revalidate(); // Revalidate the frame
+    repaint(); // Repaint the frame
+  }
+
+  public void addFeatures(Features features) {
+    startStopButton.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        gameRunning = !gameRunning;
+        if (gameRunning) {
+          startStopButton.setText("STOP!");
+          features.startGeneration();
+        } else {
+          startStopButton.setText("START!");
+          features.stopGeneration();
+        }
+      }
+    });
+    ok.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        outputSize = Integer.parseInt(input);
+        createGameBoard(outputSize, features);
+        ok.setEnabled(false);
+        size.setEnabled(false);
+        add(gameBoard, BorderLayout.CENTER);
+
+        pack();
+        revalidate();
+        startStopButton.setEnabled(true);
+        resetButton.setEnabled(true);
+      }
+    });
+
+    resetButton.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        resetButton.setEnabled(false);
+        size.setEnabled(true);
+        resetGame();
+      }
+    });
+  }
+
+  /***
+   * Update the view with the new model
+   * @param booleanBoard
+   */
+  @Override
+  public void updateGameBoard(boolean[][] booleanBoard) {
+    // Iterate over the game board JPanel's components (cells)
+    Component[] components = gameBoard.getComponents();
+    for (int i = 0; i < components.length; i++) {
+      JButton cell = (JButton) components[i];
+      int row = i / booleanBoard.length; // Calculate row index
+      int col = i % booleanBoard.length; // Calculate column index
+
+      // Set the cell color based on the corresponding cell state in the provided boolean array
+      if (booleanBoard[row][col]) {
+        cell.setBackground(Color.BLACK); // Alive cell color
+      } else {
+        cell.setBackground(Color.WHITE); // Dead cell color
+      }
+      if (gameRunning) {
+        cell.setEnabled(false);
+      } else {
+        cell.setEnabled(true);
+      }
+    }
+    // Repaint the game board to reflect the changes
+    gameBoard.repaint();
+  }
+
   private void updateButtonState() {
     input = size.getText().trim();
     boolean isValid = input.matches("\\d+");
+    int temp = Integer.parseInt(input);
+    isValid = isValid && (temp > 2);
 
-    ok.setEnabled(!input.isEmpty() && isValid && equalBigger10());
-  }
-
-  // userInput: N * N;
-  // If user input >=10 return true; <10, return false;
-  public boolean equalBigger10() {
-    return Integer.parseInt(input) >= 10;
-  }
-
-  // Actions for click every Jbutton;
-  public void actionPerformed(ActionEvent e) {
-    String actionCommand = e.getActionCommand();
-
-    // input the size N from user to the grid, 10 is the minimum
-    if (actionCommand.equals("OK")) {
-      System.out.println(Integer.parseInt(input));
-      outputSize = Integer.parseInt(input);
-
-      // after the user click the ok, all this tree button will turn on;
-      initialState.setEnabled(true);
-      start.setEnabled(true);
-      stop.setEnabled(true);
-    }
-
-    if (actionCommand.equals("START!")) {
-      // make the grid to update again and again;
-      // (Use the Thread.sleep() method to pause the program for a specified time.)
-    }
-
-    if (actionCommand.equals("STOP!")) {}
+    ok.setEnabled(!input.isEmpty() && isValid);
   }
 }

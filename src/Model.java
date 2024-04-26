@@ -1,25 +1,69 @@
-public class Model {
+import java.util.Arrays;
 
-  // userInput: N * N;
-  // If user input >=10;
-  public int[][] initialBoard(int userInputSize) {
-    return new int[userInputSize][userInputSize];
+public class Model implements IModel {
+  private Cell board[][];
+
+  public Model() {
   }
 
-  // The method to update the new board according to the role;
-  public void newBoard(int[][] initialBoard) {
-    // the array to be added for check the 8 cell around the specific cell.
+  public Model(Cell[][] board) {
+    this.board = board;
+  }
+
+  /***
+   * set the size of the board
+   * @param size
+   */
+  private void setSize(int size) {
+    this.board = new Cell[size][size];
+  }
+
+  /***
+   * initialize the board with initial configuration
+   */
+  @Override
+  public void initializeBoard(int size) {
+    this.setSize(size);
+    for (int i = 0; i < board.length; i++) {
+      for (int j = 0; j < board.length; j++) {
+        board[i][j] = new Cell(false);
+      }
+    }
+  }
+
+  /***
+   * take in the x,y coordinate of the cell, get the cell object and return a new cell
+   * @param x
+   * @param y
+   * @return
+   */
+  @Override
+  public void updateCell(int x, int y) {
+    board[x][y].toggleLife();
+  }
+
+  /***
+   * return a new model with cells updated to the expected values according to the rule
+   * rules:
+   *      - A creature that has two or three neighbors will continue live in the next generation.
+   *      - A creature that has more than 3 neighbors will die of overcrowding. Its cell will be
+   *          empty in the next generation.
+   *      - A creature that has less than 2 neighbors will die of loneliness.
+   *      - A new creature born in an empty cell that has exactly 3 neighbors.
+   */
+  @Override
+  public IModel updateBoard() {
     int[] checkArray = {-1, 0, 1};
 
-    int rows = initialBoard.length;
-    int cols = initialBoard[0].length;
+    int rows = this.board.length;
+    int cols = this.board[0].length;
 
     // make a 2D copyArray to keep the original initialBoard;
-    int[][] copy = new int[rows][cols];
+    Cell[][] copy = new Cell[rows][cols];
 
     for (int i = 0; i < rows; i++) {
       for (int i1 = 0; i1 < cols; i1++) {
-        copy[i][i1] = initialBoard[i][i1];
+        copy[i][i1] = new Cell(board[i][i1].isHasLife());
       }
     }
 
@@ -35,28 +79,38 @@ public class Model {
             int c = col + checkArray[i3];
 
             // count how many one around it.
-            if (r >= 0 && r < rows && c >= 0 && c < cols && copy[r][c] == 1) {
+            if (r >= 0 && r < rows && c >= 0 && c < cols && board[r][c].isHasLife()) {
               oneAroundIt++;
             }
           }
         }
 
         // don't add this specific cell if it's 1.
-        if (copy[row][col] == 1) {
+        if (board[row][col].isHasLife()) {
           oneAroundIt--;
 
           // 2. A creature that has more than 3 neighbors will die of overcrowding. Its cell will be
           // empty in the next generation.
           // 3. A creature that has less than 2 neighbors will die of loneliness.
           if (oneAroundIt > 3 || oneAroundIt < 2) {
-            initialBoard[row][col] = 0;
+            copy[row][col].toggleLife();
           }
 
           // 4. A new creature born in an empty cell that has exactly 3 neighbors.
         } else if (oneAroundIt == 3) {
-          initialBoard[row][col] = 1;
+          copy[row][col].toggleLife();
         }
       }
     }
+    return new Model(copy);
+  }
+
+  public Cell getCell(int x, int y) {
+    return board[x][y];
+  }
+
+  @Override
+  public String toString() {
+    return Arrays.deepToString(board);
   }
 }
